@@ -1,0 +1,189 @@
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>The Tackymeter</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #000000;
+      color: white;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .tackymeter-container {
+      position: relative;
+      background: linear-gradient(to right, #d32f2f, #fbc02d, #388e3c, #00ff00);
+      border-radius: 20px;
+      height: 400px;
+      margin: 20px auto;
+      width: 100%;
+      max-width: 1000px;
+      padding: 10px;
+      overflow-x: auto;
+    }
+
+    .labels {
+      display: flex;
+      justify-content: space-between;
+      max-width: 1000px;
+      margin: 0 auto;
+      color: #000000;
+      font-weight: bold;
+      padding: 0 10px;
+    }
+
+    .watch {
+      position: absolute;
+      cursor: pointer;
+      animation: popIn 0.6s ease-in-out;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .watch img {
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      border: 3px solid #0066ff;
+      background: white;
+    }
+
+    .watch:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 12px 4px rgba(0, 102, 255, 0.6);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 10px rgba(0, 102, 255, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 18px rgba(0, 102, 255, 0.8);
+      }
+      100% {
+        box-shadow: 0 0 10px rgba(0, 102, 255, 0.4);
+      }
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -20%);
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
+      z-index: 999;
+      max-width: 400px;
+      text-align: center;
+      color: black;
+    }
+
+    .modal.active {
+      display: block;
+    }
+
+    .modal button {
+      margin-top: 15px;
+      padding: 8px 16px;
+      background-color: #0066ff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    .modal button:hover {
+      background-color: #004fcc;
+    }
+  </style>
+</head>
+<body>
+
+<h2>The Tackymeter</h2>
+
+<div class="labels">
+  <div>Stinker</div>
+  <div>Blanc pain</div>
+  <div>Try Hard Territory</div>
+  <div>Chuffed</div>
+  <div>Horological Heaven</div>
+</div>
+
+<div class="tackymeter-container" id="tackymeter"></div>
+
+<div class="modal" id="modal">
+  <h3 id="watch-name"></h3>
+  <p id="watch-desc"></p>
+  <button onclick="closeModal()">Close</button>
+</div>
+
+<script>
+  const sheetURL = "https://opensheet.elk.sh/1wxNP4hiaGLywX2g5NZi8jYVN7abF1sbf5DYSky97vZ0/Sheet1";
+
+  function showModal(name, description) {
+    document.getElementById('watch-name').textContent = name;
+    document.getElementById('watch-desc').textContent = description;
+    document.getElementById('modal').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('active');
+  }
+
+  fetch(sheetURL)
+    .then(response => response.json())
+    .then(data => {
+      const container = document.getElementById("tackymeter");
+
+      data.forEach((watch, index) => {
+        const watchDiv = document.createElement("div");
+        watchDiv.className = "watch";
+
+        // Horizontal position
+        const position = parseFloat(watch["Position (0-100)"]);
+        watchDiv.style.left = !isNaN(position) ? `${position}%` : "0%";
+
+        // Vertical stagger to avoid overlap
+        const verticalOffset = 10 + (index % 5) * 70;
+        watchDiv.style.bottom = `${verticalOffset}px`;
+
+        // Create image with fallback and tooltip
+        const img = document.createElement("img");
+        img.src = watch["Image URL"];
+        img.alt = watch["Watch Name"];
+        img.title = watch["Watch Name"];
+        img.onerror = () => img.src = "https://via.placeholder.com/60?text=No+Img";
+
+        watchDiv.appendChild(img);
+
+        watchDiv.onclick = () => showModal(watch["Watch Name"], watch["Description"]);
+        container.appendChild(watchDiv);
+      });
+    })
+    .catch(error => console.error("Error loading watches:", error));
+</script>
+
+</body>
+</html>
