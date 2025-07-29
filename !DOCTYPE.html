@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Tackymeter</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .tackymeter-container {
+      position: relative;
+      background: linear-gradient(to right, #d32f2f, #fbc02d, #388e3c, #1976d2);
+      border-radius: 20px;
+      height: 150px;
+      margin: 40px auto;
+      width: 90%;
+      max-width: 1000px;
+      padding: 20px 10px;
+      overflow-x: auto;
+    }
+
+    .labels {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 0 auto;
+      max-width: 1000px;
+      color: #fff;
+      font-weight: bold;
+      padding: 0 10px;
+    }
+
+    .watch {
+      position: absolute;
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out;
+    }
+
+    .watch img {
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      border: 3px solid #fff;
+    }
+
+    .watch:hover {
+      transform: scale(1.1);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -20%);
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 20px rgba(0,0,0,0.3);
+      z-index: 999;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .modal.active {
+      display: block;
+    }
+
+    .modal button {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>The Tackymeter</h2>
+<div class="labels">
+  <div>Tacky</div>
+  <div>Meh</div>
+  <div>Alright</div>
+  <div>Cool</div>
+  <div>Ice Cold</div>
+</div>
+
+<div class="tackymeter-container" id="tackymeter">
+  <!-- Watches will be loaded here -->
+</div>
+
+<div class="modal" id="modal">
+  <h3 id="watch-name"></h3>
+  <p id="watch-desc"></p>
+  <button onclick="closeModal()">Close</button>
+</div>
+
+<script>
+  const sheetURL = "https://opensheet.elk.sh/2PACX-1vT1v2TsQ38emx2St8q7k98aMXy3pfKf0gloarIOHMAMh-F9wAEJpNnXSPetl-aAzNOFxEG030sLyYcA/Sheet1";
+
+  function showModal(name, description) {
+    document.getElementById('watch-name').textContent = name;
+    document.getElementById('watch-desc').textContent = description;
+    document.getElementById('modal').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('active');
+  }
+
+  fetch(sheetURL)
+    .then(response => response.json())
+    .then(data => {
+      const container = document.getElementById("tackymeter");
+      data.forEach(watch => {
+        const watchDiv = document.createElement("div");
+        watchDiv.className = "watch";
+        const position = parseFloat(watch["Position (0-100)"]);
+        if (!isNaN(position)) {
+          watchDiv.style.left = `${position}%`;
+        } else {
+          watchDiv.style.left = `0%`; // fallback
+        }
+        watchDiv.innerHTML = `<img src="${watch["Image URL"]}" alt="${watch["Watch Name"]}">`;
+        watchDiv.onclick = () => showModal(watch["Watch Name"], watch["Description"]);
+        container.appendChild(watchDiv);
+      });
+    })
+    .catch(error => console.error("Error loading watches:", error));
+</script>
+
+</body>
+</html>
